@@ -8,6 +8,13 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 object RetrofitClient {
     private const val BASE_URL = "https://api.github.com/"
+//    private val okHttpClient = OkHttpClient.Builder()
+//        .addInterceptor { chain ->
+//            val request = chain.request().newBuilder()
+//                .build()
+//            chain.proceed(request)
+//        }
+//        .build()
 
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())

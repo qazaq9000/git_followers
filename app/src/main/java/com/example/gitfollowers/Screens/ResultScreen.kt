@@ -1,6 +1,5 @@
 package com.example.gitfollowers.Screens
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -27,11 +26,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import coil3.compose.AsyncImage
 import com.example.gitfollowers.Navigation.Routes
 import com.example.gitfollowers.ViewModel.AppViewModel
@@ -40,17 +40,16 @@ import com.example.gitfollowers.ui.theme.GitFollowersTheme
 
 @Composable
 fun ResultScreen(
-    login: String,
+    username: String,
     navController: NavController,
-    viewModel: AppViewModel = viewModel()
+    viewModel: AppViewModel
 ) {
 
-    val user by viewModel.login.collectAsState()
     val follower by viewModel.follower.collectAsState()
 
-    LaunchedEffect(Unit){
-        viewModel.getUser(login)
-        viewModel.getUserFollowers(login)
+    LaunchedEffect(Unit) {
+        viewModel.getUserFollowers(username)
+        viewModel.getUser(username)
     }
 
     Column(
@@ -59,10 +58,11 @@ fun ResultScreen(
             .background(Color.Black)
     ) {
         Text(
-            text = user?.login ?: "Loading...",
+            text = username,
             color = Color.White,
             fontSize = 24.sp,
             fontWeight = FontWeight.SemiBold,
+            overflow = TextOverflow.Clip,
             modifier = Modifier.padding(16.dp)
         )
 
@@ -90,10 +90,13 @@ fun ResultScreen(
             columns = GridCells.Fixed(3),
             modifier = Modifier
         ) {
-            items(follower){ item ->
-                Follower(item.login ?: "Unknown",
-                    item.avatarUrl ?: "",
-                    navController = navController)
+            items(follower) { item ->
+                Follower(
+                    username = item.login ?: "Unknown",
+                    avatar = item.avatarUrl ?: "",
+                    onClick = "${item.login}",
+                    navController = navController
+                )
             }
         }
     }
@@ -103,8 +106,9 @@ fun ResultScreen(
 fun Follower(
     username: String,
     avatar: String,
-    navController: NavController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: String,
+    navController: NavController
 ) {
 
     Column(
@@ -112,12 +116,8 @@ fun Follower(
             .padding(top = 16.dp)
             .fillMaxSize()
             .clickable {
-                navController.navigate(Routes.Profile.createRoute(username)) {
-                    popUpTo(navController.graph.startDestinationId) { inclusive = false }
-                    launchSingleTop = true
-                }
-
-            },
+                navController.navigate(Routes.Profile.createRoute(onClick))
+                },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
@@ -133,6 +133,9 @@ fun Follower(
             fontWeight = FontWeight.SemiBold,
             color = Color.White,
             fontSize = 18.sp,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 8.dp)
         )
     }

@@ -10,6 +10,6 @@ sealed class Routes(val route: String) {
        fun createRoute(username: String?) = "profile/$username"
     }
     data object Favorites: Routes("favorites/{username}"){
-        fun createRoute(username: String?) = "favorites/$username"
     }
+
 }

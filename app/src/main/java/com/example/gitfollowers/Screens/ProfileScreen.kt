@@ -1,6 +1,7 @@
 package com.example.gitfollowers.Screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,10 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
@@ -25,17 +29,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import coil3.compose.AsyncImage
 import com.example.gitfollowers.Navigation.Routes
 import com.example.gitfollowers.ViewModel.AppViewModel
@@ -43,29 +50,50 @@ import com.example.gitfollowers.ui.theme.GitFollowersTheme
 
 
 @Composable
-fun ProfileScreen(login: String?,
-                  navController: NavController,
-                  viewModel: AppViewModel = viewModel()
+fun ProfileScreen(
+    username: String,
+    navController: NavController,
+    viewModel: AppViewModel,
+    modifier: Modifier = Modifier
+        .verticalScroll(
+            state = rememberScrollState(),
+            enabled = true
+        )
 ) {
-
     val user by viewModel.login.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.getUser(login)
+        viewModel.getUser(username)
+        viewModel.getUserByLogin(username)
     }
 
+
+    val list by viewModel.database.collectAsState()
+    val isFavorite by derivedStateOf { list.any { it.id == user?.id } }
+    val favoriteIcon = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder
+    val favoriteColor = if (isFavorite) Color.Red else Color.Gray
+
+
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Color(0xFF252627))
             .padding(8.dp)
     ) {
-
         ProfileInfo(
             img = user?.avatar ?: "",
             name = user?.name ?: "",
             username = user?.login ?: "",
-            location = user?.location ?: ""
+            location = user?.location ?: "",
+            onClick =
+                {if (isFavorite) {
+                user?.let { viewModel.deleteUser(it) }
+            } else {
+                user?.let { viewModel.addUser(it) }
+            }},
+
+            icon = favoriteIcon,
+            tint = favoriteColor
         )
         Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -83,7 +111,7 @@ fun ProfileScreen(login: String?,
             gistsCount= user?.gists ?: 0,
             buttonText = "GitHub Profile",
             buttonColor = Color.Magenta,
-            onClick = navController.navigate(Routes.Profile.createRoute(login))
+            onClick = {}
         )
 
         InfoCard(
@@ -93,7 +121,7 @@ fun ProfileScreen(login: String?,
             gistsCount= user?.following ?: 0,
             buttonText = "Get Followers",
             buttonColor = Color.Green,
-            onClick = navController.navigate(Routes.Result.createRoute(login))
+            onClick = {navController.navigate(Routes.Result.createRoute(user?.login))}
         )
 
         Text("GitHub since ${user?.since?.substring(0,4)}",
@@ -112,7 +140,11 @@ fun ProfileInfo(
     name: String,
     username: String,
     location: String,
+    onClick:() -> Unit,
+    icon: ImageVector,
+    tint: Color
 ) {
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
@@ -135,8 +167,11 @@ fun ProfileInfo(
             Text(
                 text = username,
                 color = Color.White,
-                fontSize = 32.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
@@ -161,16 +196,20 @@ fun ProfileInfo(
                     fontSize = 14.sp
                 )
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.FavoriteBorder,
-                    contentDescription = null
-                )
-            }
         }
-
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .size(30.dp)
+                    .clickable{onClick()}
+            )
+        }
     }
 }
 
@@ -182,7 +221,7 @@ fun InfoCard(
     gistsCount: Int,
     buttonText: String,
     buttonColor: Color,
-    onClick: Unit
+    onClick: () -> Unit
 ) {
 
     Card(
@@ -254,7 +293,7 @@ fun InfoCard(
             }
 
             Button(
-                onClick = {onClick},
+                onClick = onClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
@@ -279,6 +318,6 @@ fun InfoCard(
 @Composable
 fun ProfileScreenPreview() {
     GitFollowersTheme {
-        // ProfileScreen()
+
     }
 }

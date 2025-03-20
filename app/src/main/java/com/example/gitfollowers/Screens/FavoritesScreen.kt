@@ -1,6 +1,5 @@
 package com.example.gitfollowers.Screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +14,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,11 +26,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import coil3.compose.AsyncImage
+import com.example.gitfollowers.Navigation.Routes
 import com.example.gitfollowers.R
+import com.example.gitfollowers.ViewModel.AppViewModel
 import com.example.gitfollowers.ui.theme.GitFollowersTheme
 
 @Composable
-fun FavoritesScreen(){
+fun FavoritesScreen(username: String, viewModel: AppViewModel, navController: NavController){
+
+    val list by viewModel.database.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.getUserByLogin(username)
+        viewModel.getAll()
+    }
 
     Column(
         horizontalAlignment = Alignment.Start,
@@ -43,29 +57,35 @@ fun FavoritesScreen(){
             fontWeight = FontWeight.Bold,
             color = Color.White,
             modifier = Modifier.padding(8.dp))
-      /*  LazyColumn(
+       LazyColumn(
             modifier = Modifier,
         ) {
-            items(){ profile ->
-                User(name = profile.username, img = profile.image, modifier = Modifier)
+            items(list){ item ->
+                User(item?.login ?: "Unknown",
+                    item?.avatar ?: "",
+                    onDelete = {viewModel.deleteUser(item)},
+                    navController = navController)
             }
-        }*/
-
+        }
     }
 }
 
 @Composable
-fun User(modifier: Modifier = Modifier, name: String, img: Int){
-
+fun User(
+    name: String,
+    img: String,
+    onDelete: () -> Unit,
+    navController: NavController,
+){
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        Image(painter = painterResource(img),
+        AsyncImage(
+            model = img,
             contentDescription = null,
-
             modifier = Modifier
                 .size(100.dp)
                 .weight(1f)
@@ -81,22 +101,27 @@ fun User(modifier: Modifier = Modifier, name: String, img: Int){
                 .padding(start = 8.dp)
         )
         IconButton(
-            onClick = {},
+            onClick = {onDelete()},
             enabled = true,
             modifier = Modifier.weight(0.5f)
         ){
             Icon(
-                painter = painterResource(R.drawable.baseline_star_border_24),
+                painter = painterResource(R.drawable.baseline_person_remove_24),
                 contentDescription = null,
                 tint = Color.Yellow,
-                modifier = Modifier.size(50.dp)
+                modifier = Modifier
+                    .size(50.dp)
             )
         }
 
         IconButton(
-            onClick = {},
+            onClick = {
+                navController.navigate(Routes.Profile.createRoute(name)){
+                    launchSingleTop = true
+                }
+            },
             modifier = Modifier.weight(0.5f)
-        ){
+    ){
             Icon(
                 painter = painterResource(R.drawable.baseline_arrow_forward_ios_24),
                 contentDescription = null,
