@@ -3,6 +3,7 @@
 GitHub Followers is a powerful and intuitive application that lets you search for GitHub users and dive into their list of followers. Whether you're a developer, recruiter, or enthusiast, this app makes exploring GitHub profiles fast and simple.
 
 🔍 Key Features:
+
 Search GitHub Users
 Quickly find any public GitHub profile using a smooth and responsive search interface.
 
@@ -26,16 +27,11 @@ Optimized for speed and simplicity, the app ensures a smooth user experience on 
 - [GitHub REST API](https://docs.github.com/en/rest)
 
 
-## 📸 Demo
-
-
-## Demo
-
-Insert gif or link to demo
-
-
 ## Screenshots
 
-![App Screenshot](assets/Screenshot_20250508_155442.png) 
-
-
+<p align="center">
+<img src="/assets/search.png">
+<img src="/assets/followers.png">
+<img src="/assets/profile.png">
+<img src="/assets/favorites.png">
+</p>
